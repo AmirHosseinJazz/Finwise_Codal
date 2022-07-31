@@ -534,7 +534,7 @@ def takeCareOFCF(driver,CodalRaw_ID,CodalRaw_links):
         InsertCF(get_CF_type1_Aggregated(driver),CodalRaw_ID,CodalRaw_links,'CFCons')
 
 def RUN():
-    df=get_unconverted().tail(1)
+    df=get_unconverted()
     driver=webdriver.Chrome()
     driver.maximize_window()  
     for index,row in df.iterrows():

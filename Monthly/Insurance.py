@@ -367,9 +367,9 @@ def get_titlebox(driver):
             results.append(header_name)
         i=i+1
     return results         
-def RUN(driver):
-    # driver = webdriver.Chrome()
-    # driver.maximize_window()                 
+def RUN():
+    driver = webdriver.Chrome()
+    driver.maximize_window()                 
     df=get_unconverted()
     AllData=len(df.index)
     counter=0
@@ -392,3 +392,4 @@ def RUN(driver):
             print(error)
             print(CodalRaw_links)
             continue
+RUN()

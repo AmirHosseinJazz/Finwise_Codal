@@ -56,8 +56,9 @@ async def download_OneStock(url,session):
                 DF[col]=(DF[col]).apply(str)
             cols=[i for i in DF.columns if i in ["HasHtml","HasExcel","HasPdf","HasPdf","HasXbrl","HasAttachment"]]
             for col in cols:
-                DF[col]=(DF[col]).apply(bool)     
-            DF=DF.drop(columns=['IsEstimate'])      
+                DF[col]=(DF[col]).apply(bool)
+            if 'IsEstimate' in DF.columns:     
+                DF=DF.drop(columns=['IsEstimate'])      
             tuples = [tuple(x) for x in DF.to_numpy()]   
             con = await asyncpg.connect(host=db_host,port=db_port,user=db_username,password=db_pass,database=db_database)    
             await con.execute('''CREATE TEMPORARY TABLE _data(
@@ -115,6 +116,7 @@ if __name__=="__main__":
         DF=pd.json_normalize(js['Letters'])
         Range=js['Page']
     Rangelist=range(1,Range)
+    # Rangelist=range(1,3)
     chunksize=20
     chuncks=round(Range/chunksize)
     for i in range(1+chuncks):
