@@ -162,12 +162,18 @@ def check_types(driver):
     return typelist  
 def get_options(driver):
     listOFOptions=[]
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     for i in select.options:
         listOFOptions.append(str(i.text).strip().replace('\u200c',''))
     return listOFOptions       
 def get_CF_type1_nonAggregated(driver):
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     allOptions=get_options(driver)
     if('صورت جریان های نقدی' in allOptions):
         select.select_by_visible_text('صورت جریان های نقدی')
@@ -300,7 +306,10 @@ def get_CF_type1_nonAggregated(driver):
         except:
             return pd.DataFrame()
 def get_CF_type1_Aggregated(driver):
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     allOptions=get_options(driver)
     if('صورت جریان های نقدی تلفیقی' in allOptions):
         select.select_by_visible_text('صورت جریان های نقدی تلفیقی')

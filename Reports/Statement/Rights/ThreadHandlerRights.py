@@ -176,7 +176,10 @@ def chunks(l, n):
 
 def get_options(driver):
     listOFOptions=[]
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     for i in select.options:
         listOFOptions.append(str(i.text).strip().replace('\u200c',''))
     return listOFOptions               
@@ -319,7 +322,10 @@ def Insert_RightStatement_CONS(results,CID,Clink,TypeOfReport):
 def get_Rights_notCons(report_id,driver):
     results={}
     descs=[]
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     select.select_by_visible_text('صورت تغییرات در حقوق مالکانه')
     if not (UpdateError(driver,report_id,'NotCons')):
         return pd.DataFrame()
@@ -388,7 +394,10 @@ def get_Rights_notCons(report_id,driver):
 def get_Rights_Cons(report_id,driver):
     results={}
     descs=[]
-    select = Select(driver.find_element_by_id('ddlTable'))
+    try:
+        select = Select(driver.find_element_by_id('ddlTable'))
+    except: 
+        select = Select(driver.find_element_by_id('ctl00_ddlTable'))
     select.select_by_visible_text('صورت تغییرات در حقوق مالکانه تلفیقی')
     if not (UpdateError(driver,report_id,'NotCons')):
         return pd.DataFrame()
