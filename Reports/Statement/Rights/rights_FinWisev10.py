@@ -454,10 +454,14 @@ def get_Rights_Cons(report_id,driver):
             InsertError(report_id,'Cons')                                                 
     except:
         InsertError(report_id,'Cons')                                                 
-def RUN(driver):
-    # driver=webdriver.Chrome()
-    # driver.maximize_window()  
-    df=get_unconverted()
-    for index,row in df.iterrows():
+# def RUN(driver):
+driver=webdriver.Chrome()
+driver.maximize_window()  
+df=get_unconverted()
+for index,row in df.iterrows():
+    try:
         driver.get('https://codal.ir'+str(row['HtmlUrl']))
         takeCareOFRights(row['report_ID'],row['HtmlUrl'],driver)            
+    except Exception as E:
+        print(E)
+        continue

@@ -355,9 +355,9 @@ def get_description_product_service(driver):
         desc_modif=""
     results['desc_modif']=desc_modif
     return results 
-def RUN(driver):
-#     driver = webdriver.Chrome()
-#     driver.maximize_window()                 
+def RUN():
+    driver = webdriver.Chrome()
+    driver.maximize_window()                 
     df=get_unconverted()
     AllData=len(df.index)
     counter=0
@@ -387,3 +387,4 @@ def RUN(driver):
             print(error)
             print(CodalRaw_links)
             continue
+    driver.quit()

@@ -64,42 +64,6 @@ def get_announcments(driver):
     results['Last']=previousAnnouncment
     results['Next']=nextAnnouncment
     return results
-def get_titlebox(driver):
-    results=[]
-    titlebox=driver.find_elements_by_xpath('//div[@class="symbol_and_name"]/div/div')
-    i=0
-    for t in titlebox:
-        if(i==0):
-            header_name=(t.text.split(':\n')[1])
-            header_name2 = ''.join([i for i in header_name if not i.isdigit()])
-            header_name2 = header_name2.replace('ك','ک')
-            header_name2 = header_name2.replace('ي','ی')
-            header_name=header_name2
-
-        if(i==2):
-            header_Ticker=(t.text.split(':\n')[1])
-            header_Ticker_2 = ''.join([i for i in header_Ticker if not i.isdigit()])
-            header_Ticker_2 = header_Ticker_2.replace('ك','ک')
-            header_Ticker_2 = header_Ticker_2.replace('ي','ی')
-            header_Ticker=header_Ticker_2
-            if('(' in header_Ticker_2):
-                header_Ticker_2=header_Ticker_2.split('(')[0]
-            results.append(header_Ticker_2)
-        if(i==5):
-            header_PeriodLength=[int(s) for s in str.split(t.text) if s.isdigit()][0]
-            text=t.text
-            if('(حسابرسی نشده)') in text:
-                text=text.replace(' (حسابرسی نشده)','')
-            if('(حسابرسی شده)') in text:
-                text=text.replace(' (حسابرسی شده)','')
-            header_until=text[-10:]
-            results.append(header_PeriodLength)
-            results.append(header_until)
-            results.append(header_name)
-        if(i==7):
-            results.append(t.text.split('/')[1])
-        i=i+1
-    return results
 def log_it(text):
     try:
         connection = psycopg2.connect(user=db_username,
@@ -355,7 +319,10 @@ def get_titlebox(driver):
                 header_Ticker_2=header_Ticker_2.split('(')[0]
             results.append(header_Ticker_2)
         if(i==5):
-            header_PeriodLength=[int(s) for s in str.split(t.text) if s.isdigit()][0]
+            try:
+                header_PeriodLength=[int(s) for s in str.split(t.text) if s.isdigit()][0]
+            except IndexError:
+                header_PeriodLength=1
             text=t.text
             if('(حسابرسی نشده)') in text:
                 text=text.replace(' (حسابرسی نشده)','')
@@ -392,4 +359,4 @@ def RUN():
             print(error)
             print(CodalRaw_links)
             continue
-RUN()
+    driver.quit()

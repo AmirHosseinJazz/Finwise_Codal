@@ -58,6 +58,11 @@ def check_type(driver):
             Type='Product'
             prod_type=3
             typelist=['Product',3]
+    if(Type=='Other'):
+        wholefile=str(driver.page_source)
+        if('Services And Sale') in wholefile:
+            Type='Service'
+            typelist=['Service']
     if check_exists_by_xpath(driver,'//*[contains(@id, "Building")]'):
         Type='Construction'
         typelist=['Construction']
@@ -70,6 +75,26 @@ def check_type(driver):
     if check_exists_by_xpath(driver,'//*[contains(@id, "Insurance")]'):
         Type='Insurance'
         typelist=['Insurance']
+    if(Type=='Other'):
+        wholefile=str(driver.page_source)
+        if('حق بیمه صادره') in wholefile:
+            Type='Insurance'
+            typelist=['Insurance']
+    if(Type=='Other'):
+        wholefile=str(driver.page_source)
+        if('Leasing') in wholefile or ('هزینه تامین منابع مالی عملیات لیزینگ محقق شده') in wholefile:
+            Type='Leasing'
+            typelist=['Leasing']
+    if(Type=='Other'):
+        wholefile=str(driver.page_source)
+        if('Monthly Activity Bank') in wholefile:
+            Type='Bank'
+            typelist=['Bank']
+    if(Type=='Other'):
+        wholefile=str(driver.page_source)
+        if('Assigned Projects') in wholefile:
+            Type='Construction'
+            typelist=['Construction']
     return typelist
 def check_exists_by_xpath(driver,xpath):
     try:

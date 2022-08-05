@@ -369,13 +369,13 @@ def check_type(driver):
             Type='NewProduct'
             typelist=['NewProduct']
     return typelist           
-def RUN(driver):
-#     driver = webdriver.Chrome()
-#     driver.maximize_window()                 
+def RUN():
+    driver = webdriver.Chrome()
+    driver.maximize_window()                 
     df=get_unconverted()
     AllData=len(df.index)
     counter=0
-    for index,row in df.tail(2).iterrows():
+    for index,row in df.iterrows():
         try:
             CodalRaw_ID=int(row['report_ID'])
             CodalRaw_links=row['HtmlUrl']
@@ -406,4 +406,4 @@ def RUN(driver):
             print(error)
             print(CodalRaw_links)
             continue
-    # driver.quit()    
+    driver.quit()    

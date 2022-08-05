@@ -469,6 +469,9 @@ def set_Options(driver,CodalRaw_ID):
     'ترازنامه تلفيقي':'BSCons',
         'صورت سود و زیان':'IN',
         'صورت سود و زیان تلفیقی':'Incons',
+        'سود و زیان - تلفیقی':'Incons',
+        'صورت سود و زیان - تلفیقی':'Incons',
+        'صورت سود و زیان جامع - تلفیقی':'IncCompCons',
         'صورت سود و زیان جامع تلفیقی':'IncCompCons',
         'صورت سود و زیان جامع':'INComp',
         
@@ -481,7 +484,9 @@ def set_Options(driver,CodalRaw_ID):
         'جریان وجوه نقد':'CF',
         'صورت تغییرات در حقوق مالکانه':'Right',
         'صورت تغییرات در حقوق مالکانه تلفیقی':'RightCons',
+        'صورت تغیرات در حقوق مالکانه تلفیقی':'RightCons',
         'صورت جریان های نقدی':'CF',
+        'صورت جریان نقدی تلفیقی':'CFCons',
         'صورت جریان های نقدی تلفیقی':'CFCons',
         'جریان وجوه نقد تلفیقی':'CFCons',
         'خلاصه اطلاعات گزارش تفسیری - صفحه 1':'Interpret',
@@ -496,12 +501,16 @@ def set_Options(driver,CodalRaw_ID):
         'صورت ريزمعاملات سهام - تحصیل شده':'bought',
         'صورت ريزمعاملات سهام - واگذار شده':'Sold',
         'درآمد سود سهام محقق شده':'Div',
+        'صورت ریزمعاملات سهام - تحصیل شده':'bought',
+        'صورت ریزمعاملات سهام - واگذار شده':'Sold'
     }
     
     listOf=get_options(driver)
     Available=[]
     Available.append('RepID')
     for i in listOf:
+        i=i.replace('ك','ک')
+        i=i.replace('ي','ی')
         Available.append(dictListOf[i])
     DF=pd.DataFrame(columns=Available)
     DF=DF.append({'RepID':CodalRaw_ID},ignore_index=True)

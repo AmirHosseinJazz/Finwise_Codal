@@ -37,7 +37,7 @@ def check_type(driver):
     else:
         if check_exists_by_xpath(driver,'//*[@id="ctl00_h1MasterTitle"]'):
             mastertitle=driver.find_element_by_xpath('//*[@id="ctl00_h1MasterTitle"]').text
-            if mastertitle=='صورت وضعیت پورتفوی':
+            if mastertitle=='5H1* H69�* ~H1*AH�':
                 Type='Investment'
                 typelist=['Investment']
     if (Type=='Other'):
@@ -73,12 +73,10 @@ def get_unconverted():
                                           database=db_database)
         cursor = connection.cursor()
         df = psql.read_sql("""
-
         select P."report_ID",R."HtmlUrl"
-            from monthly."PreMonthly" as P inner join codalraw."allrawReports" as R on P."report_ID"=R."TracingNo"
-            WHERE P."Type"='Service' and P.converted=False"""
-
-                           , connection)
+        from monthly."PreMonthly" as P inner join codalraw."allrawReports" as R on P."report_ID"=R."TracingNo"
+        WHERE P."Type"='Service' and P.converted=False 
+        """,connection)
         return df
     except (Exception, psycopg2.Error) as error :
             if(connection):
@@ -217,12 +215,12 @@ def get_invest_desc(driver):
     if (investDeficit.isdigit()):
         investDeficit=int(investDeficit)
     else:
-        if (',' in str(investDeficit)) | (investDeficit=='۰') | (str(investDeficit).isdigit()) | ('.' in str(investDeficit)) :
+        if (',' in str(investDeficit)) | (investDeficit=='�') | (str(investDeficit).isdigit()) | ('.' in str(investDeficit)) :
             investDeficit=str(investDeficit).replace(',','')
             investDeficit.replace('.','0')
             if ('.' in investDeficit):
                 investDeficit = investDeficit.split('.')[0]
-            if (investDeficit=='۰'):
+            if (investDeficit=='�'):
                 investDeficit=0
             investDeficit=int(investDeficit)
     if check_exists_by_xpath(driver,'//textarea[@name="ctl00$cphBody$txbIndustryGrpInvestmentDsc"]'):
@@ -271,8 +269,8 @@ def get_data_product(x,driver):
             rows.append(datatemp)
         A=pd.DataFrame.from_dict(rows, orient='columns')     
         A=A.iloc[:-1]
-    A.replace('ك','ک',regex=True,inplace=True)
-    A.replace('ي','ی',regex=True,inplace=True)
+    A.replace('C','�',regex=True,inplace=True)
+    A.replace('J','�',regex=True,inplace=True)
     return A
 def ng_product_desc(driver):
     wholefile=str(driver.page_source)
@@ -332,10 +330,6 @@ def InsertService(DF):
         cursor.executemany(postgres_insert_query_cheif,DF.to_dict(orient='records'))
         connection.commit()
 
-
-
-
-
         postgres_insert_query_cheif = """
          DO 
             $$
@@ -363,77 +357,217 @@ def InsertService(DF):
         print('Service Done ')
     except(Exception, psycopg2.Error) as error:
             if(connection):
-                print('Failed to Update FARA Bourse Companies ', error)
+                print('Failed to Update Service ', error)
                 # log_it('Failed to Update FARA Bourse Companies ')
     finally:
         if(connection):
             cursor.close()
             connection.close()
-                  
-def RUN(driver):                
-    # driver = webdriver.Chrome()
-    # driver.maximize_window()               
-    df=get_unconverted()
-    AllData=len(df.index)
-    DFS=[]
+
+
+
+
+
+def FinWise10_NG_Product_desc(driver):
+    wholefile=str(driver.page_source)
+    wholefile=wholefile[wholefile.find('var datasource')+16:]
+    wholefile=wholefile[:wholefile.find('</script>')]
+    wholefile=wholefile.replace('\u200c', '')
+    wholefile=wholefile.replace('\n', '')
+    wholefile=wholefile.replace(';', '')
+    json1=json.loads(wholefile)
+    dict1=[]
     counter=0
-    for index,row in df.iterrows():
+    for k in json1['sheets'][0]['tables']:
+        if k['aliasName']=='ServiceMonthlyActivityDesc1':
+            for t in k['cells']:
+                if counter%2==1:
+                    dict1.append(t['value'])
+                counter=counter+1
+    desc_titles=['DESCMod','DESCM','DESCY']
+    alldescs={}
+    desccounter=0
+    for i in range(len(dict1)):
+        alldescs[desc_titles[i]]=dict1[i]
+    if check_exists_by_xpath(driver,'//span[@id="ctl00_cphBody_ucNavigateToNextPrevLetter_lblCorrectionDesc"]'):
+        alldescs['DESCT']=driver.find_element_by_xpath('//span[@id="ctl00_cphBody_ucNavigateToNextPrevLetter_lblCorrectionDesc"]').text
+    else:
+        alldescs['DESCT']=""
+    return alldescs
+def FinWise10_NewService(driver,CID):
+
+    wholefile=str(driver.page_source)
+    wholefile=wholefile[(wholefile.find('"cells":['))+8:]
+    wholefile=wholefile[:wholefile.find('</script>')-10]
+    wholefile=wholefile[:wholefile.rfind(']')]
+    wholefile=wholefile[:wholefile.rfind(']')+1]
+    wholefile=wholefile.replace('[','')
+    wholefile=wholefile.replace(']','')
+    wholefile=wholefile.replace('\u200c', '')
+
+    numerics={
+            3:'ContractDuration',
+            4:'RevUntilStartDate',
+            5:'Modifications',
+            6:'RevUntilStartDateModified',
+            7:'RevPeriod',
+            8:'RevUntilEndOfPeriod',
+            9:'RevLastYear',
+            10:'Desc',
+            11:'Desc2',
+        }
+    newProduct_labels={
+            1:'Item',
+            2:'ContractStartDate',
+            3:'ContractDuration',
+            4:'RevUntilStartDate',
+            5:'Modifications',
+            6:'RevUntilStartDateModified',
+            7:'RevPeriod',
+            8:'RevUntilEndOfPeriod',
+            9:'RevLastYear',
+            10:'Desc',
+            11:'Desc2',
+        }
+    listofDicts=[]
+    for i in range(1,wholefile.count('value"')+1):
+        start=find_nth(wholefile,'value"',i)
+        end=find_nth(wholefile,'value"',i)+50
+        wholefile=wholefile[:start]+(wholefile[start:end].replace('{',' '))+wholefile[end:]
+        wholefile=wholefile[:start]+(wholefile[start:end].replace('}',' '))+wholefile[end:]
+    for i in range(1,wholefile.count('{')+1):
         try:
-            CodalRaw_ID=int(row['report_ID'])
-            CodalRaw_links=row['HtmlUrl']
-            #print(CodalRaw_ID)
-            driver.get('http://codal.ir'+CodalRaw_links)
-            time.sleep(3)
-            driver.execute_script("document.body.style.zoom='100%';document.body.style.zoom='50%'")
-            alldesc=get_description_product_service(driver)
-            Announcment=get_announcments(driver)
-            tree = html.fromstring(driver.page_source)
-            toDates=[]
-            
-            for t in tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'):
-                if re.search('\d\d\d\d/\d\d/\d\d',t.text):
-                    ss=(re.search('\d\d\d\d/\d\d/\d\d',t.text)[0])
-                    if ss!="" and ss not in toDates:
-                        toDates.append(ss)
-            rows=[]
-            for k in tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//tr[3]//table//tr'):
-                row=(k.xpath('.//td//text()'))
-                rows.append(row)
-            DF=pd.DataFrame(rows)
-            if len(tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'))==14:
-                DF.columns=['ID','Item','ContractStartDate','ContractDuration','A','B','RevUntilStartDate','Modifications','RevUntilStartDateModified', 'RevPeriod','RevUntilEndOfPeriod','RevLastYear','Desc']
-                DF['EstimationRevYear']=np.nan
-                DF['EstimationCostYear']=np.nan
-            if len(tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'))==11:
-                DF.columns=['Item','ContractStartDate','ContractDuration','EstimationRevYear','EstimationCostYear','RevPeriod',
-            'RevUntilEndOfPeriod','RevLastYear','Desc']
-                DF['RevUntilStartDate']=np.nan
-                DF['Modifications']=np.nan
-                DF['RevUntilStartDateModified']=np.nan
-            
-            DF.replace('ك','ک',regex=True,inplace=True)
-            DF.replace('ي','ی',regex=True,inplace=True)
-            for i in DF.columns:
-                if i not in ['Item','ID','ContractStartDate','Desc']:
-                    DF[i]=DF[i].apply(get_true_value)
-            DF['AnNext']=Announcment['Next']
-            DF['AnPrev']=Announcment['Last']
-            DF['DESCT']=alldesc['desc_title']
-            DF['DESCM']=alldesc['desc_month']
-            DF['DESCY']=alldesc['desc_year']
-            DF['DESCMod']=alldesc['desc_modif']
-            DF['CodalRawLink']=CodalRaw_links
-            DF['CodalID']=CodalRaw_ID
-            DF = DF.replace({np.nan: None})
-            # DFS.append(DF)
-            InsertService(DF)
-            counter=counter+1
-            percentage=(counter*100)/AllData
-            print("{0:.2f}".format(percentage))
-            
-        except (Exception, psycopg2.Error) as error :
-            print(error)
-            print(CodalRaw_links)
+            temp=wholefile[find_nth(wholefile,'{',i):find_nth(wholefile,'}',i)+1]
+            listofDicts.append(json.loads(temp))
+        except:
             continue
-    # driver.quit()
+    df1=pd.DataFrame(listofDicts)
+    NEW=pd.DataFrame()
+    firstIter=True
+    for i in range(len(newProduct_labels.keys())):
+        category=df1[(df1['columnCode']==i+1)&(df1['valueTypeName']!='Blank')&(df1['rowTypeName']!='FixedRow')].sort_values(by='rowSequence').category.tolist()
+        temp_list=df1[(df1['columnCode']==i+1)&(df1['valueTypeName']!='Blank')&(df1['rowTypeName']!='FixedRow')].sort_values(by='rowSequence').value.tolist()
+        if (firstIter):
+            NEW[newProduct_labels[i+1]]=temp_list
+            NEW['Categories']=category
+        else:
+            if(len(temp_list)<len(NEW.index)):
+                for k in range(len(NEW.index)-len(temp_list)):
+                    temp_list.append('')
+            NEW[newProduct_labels[i+1]]=temp_list
+        firstIter=False
+    NEW=NEW[NEW['Item']!='']
+    df_discount=df1[df1['category']==5][['value']].T
+    if not df_discount.empty:
+        df_discount.columns=newProduct_labels.values()
+        df_discount['Categories']=5
+        df_discount.reset_index(inplace=True)
+        df_discount.drop(columns='index',inplace=True)
+        NEW=NEW.append(df_discount)
+    Categoriesdf=pd.DataFrame.from_dict({0:'Whole',1:'Domestic_Sale',2:'Export_Sale',3:'Service_revenue',4:'Refund',5:'Discount'  },orient='index')
+    Categoriesdf.reset_index(inplace=True)
+    Categoriesdf.columns=['Categories','categoryName']
+    NEW.replace('',0,regex=True,inplace=True)
+    NEW=NEW.replace('-Infinity',0)
+    NEW=NEW.replace('Infinity',0)
+    NEW=NEW.applymap(roundTheFloats)
+    NEW2=pd.merge(NEW,Categoriesdf,on='Categories')
+    NEW2.drop(columns=['Categories'],inplace=True)
+    NEW2.replace('C','�',regex=True,inplace=True)
+    NEW2.replace('J','�',regex=True,inplace=True)
+    for i in numerics.values():
+        NEW2[i] = NEW2[i].astype(str)
+        if i in NEW2.columns:
+            NEW2[i] = NEW2[i].str.replace(r'\D+', '0')
+            NEW2[i]=NEW2[i].astype(int)
+    descdf=pd.DataFrame([FinWise10_NG_Product_desc(driver)])
+    announcedf=pd.DataFrame([get_announcments(driver)])
+    announcedf.columns=['AnPrev','AnNext']
+    NEW2['tmp'] = 1
+    descdf['tmp'] = 1
+    NEW2_1 = pd.merge(NEW2, descdf, on=['tmp'])
+    NEW2_1 = NEW2_1.drop('tmp', axis=1)
+    NEW2_1['tmp'] = 1
+    announcedf['tmp'] = 1
+    NEW2_3= pd.merge(NEW2_1, announcedf, on=['tmp'])
+    NEW2_3 = NEW2_3.drop('tmp', axis=1)
+    NEW2_3['CodalID']=CID
+    NEW2_3=NEW2_3[(NEW2_3['Item']!='')&(NEW2_3['Item']!=None)&(NEW2_3['Item']!='None')&(NEW2_3['Item'].notnull())]  
+    NEW2_3['EstimationRevYear']=np.nan
+    NEW2_3['EstimationCostYear']=np.nan  
+    return NEW2_3    
+
+
+
+
+
+
+# def RUN(driver):                
+driver = webdriver.Chrome()
+driver.maximize_window()               
+df=get_unconverted()
+AllData=len(df.index)
+DFS=[]
+counter=0
+for index,row in df.iterrows():
+    try:
+        CodalRaw_ID=int(row['report_ID'])
+        CodalRaw_links=row['HtmlUrl']
+        #print(CodalRaw_ID)
+        driver.get('http://codal.ir'+CodalRaw_links)
+        time.sleep(3)
+        driver.execute_script("document.body.style.zoom='100%';document.body.style.zoom='50%'")
+        alldesc=get_description_product_service(driver)
+        Announcment=get_announcments(driver)
+        tree = html.fromstring(driver.page_source)
+        toDates=[]
         
+        for t in tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'):
+            if re.search('\d\d\d\d/\d\d/\d\d',t.text):
+                ss=(re.search('\d\d\d\d/\d\d/\d\d',t.text)[0])
+                if ss!="" and ss not in toDates:
+                    toDates.append(ss)
+        rows=[]
+        for k in tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//tr[3]//table//tr'):
+            row=(k.xpath('.//td//text()'))
+            rows.append(row)
+        DF=pd.DataFrame(rows)
+        if len(tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'))==14:
+            DF.columns=['ID','Item','ContractStartDate','ContractDuration','A','B','RevUntilStartDate','Modifications','RevUntilStartDateModified', 'RevPeriod','RevUntilEndOfPeriod','RevLastYear','Desc']
+            DF['EstimationRevYear']=np.nan
+            DF['EstimationCostYear']=np.nan
+        if len(tree.xpath('//table[@id="ctl00_cphBody_ucService1_Table1"]//table//th/span'))==11:
+            DF.columns=['Item','ContractStartDate','ContractDuration','EstimationRevYear','EstimationCostYear','RevPeriod','RevUntilEndOfPeriod','RevLastYear','Desc']
+            DF['RevUntilStartDate']=np.nan
+            DF['Modifications']=np.nan
+            DF['RevUntilStartDateModified']=np.nan
+        
+        DF.replace('C','�',regex=True,inplace=True)
+        DF.replace('J','�',regex=True,inplace=True)
+        for i in DF.columns:
+            if i not in ['Item','ID','ContractStartDate','Desc']:
+                DF[i]=DF[i].apply(get_true_value)
+        DF['AnNext']=Announcment['Next']
+        DF['AnPrev']=Announcment['Last']
+        DF['DESCT']=alldesc['desc_title']
+        DF['DESCM']=alldesc['desc_month']
+        DF['DESCY']=alldesc['desc_year']
+        DF['DESCMod']=alldesc['desc_modif']
+        DF['CodalRawLink']=CodalRaw_links
+        DF['CodalID']=CodalRaw_ID
+        DF = DF.replace({np.nan: None})
+        if len(tree.xpath('//table[@class="rayanDynamicStatement"]'))>0:
+            DF=FinWise10_NewService(driver,CodalRaw_ID)
+            DF.replace('C','�',regex=True,inplace=True)
+            DF.replace('J','�',regex=True,inplace=True)
+        # DFS.append(DF)
+        InsertService(DF)
+        counter=counter+1
+        percentage=(counter*100)/AllData
+        print("{0:.2f}".format(percentage))
+        
+    except (Exception, psycopg2.Error) as error :
+        print(error)
+        print(CodalRaw_links)
+        continue
+driver.quit()

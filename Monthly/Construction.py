@@ -416,7 +416,10 @@ def get_titlebox(driver):
                 header_Ticker_2=header_Ticker_2.split('(')[0]
             results.append(header_Ticker_2)
         if(i==5):
-            header_PeriodLength=[int(s) for s in str.split(t.text) if s.isdigit()][0]
+            try:
+                header_PeriodLength=[int(s) for s in str.split(t.text) if s.isdigit()][0]
+            except IndexError:
+                header_PeriodLength=1
             text=t.text
             if('(حسابرسی نشده)') in text:
                 text=text.replace(' (حسابرسی نشده)','')
@@ -452,5 +455,4 @@ def RUN():
             print(error)
             print(CodalRaw_links)
             continue
-    #driver.quit()  
-RUN()  
+    driver.quit()

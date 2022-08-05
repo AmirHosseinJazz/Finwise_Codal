@@ -712,9 +712,9 @@ def insertInvest(titles,alldesc,DF_Invests,CID,Clink):
             cursor.close()
             connection.close()
 
-def RUN():
-    driver = webdriver.Chrome()
-    driver.maximize_window()                 
+def RUN(driver):
+    # driver = webdriver.Chrome()
+    # driver.maximize_window()                 
     df=get_unconverted()
     AllData=len(df.index)
     counter=0
@@ -739,4 +739,4 @@ def RUN():
             print(error)
             print(CodalRaw_links)
             continue
-RUN()
+# RUN()

@@ -113,8 +113,8 @@ def get_unconverted():
                                           database=db_database)
         cursor = connection.cursor()
         df = psql.read_sql("""
-    select "report_ID","HtmlUrl" from codalraw."SheetsConverted" inner join codalraw."allrawReports" on "report_ID"="TracingNo"
-     where ("Exist_Cf"=False or "Exist_cfCons"=False) order by "SentTime"
+        select "report_ID","HtmlUrl" from codalraw."SheetsConverted" inner join codalraw."allrawReports" on "report_ID"="TracingNo"
+        where ("Exist_Cf"=False or "Exist_cfCons"=False) order by "SentTime"
         """, connection)
         return df
     except (Exception, psycopg2.Error) as error :
@@ -543,14 +543,20 @@ def takeCareOFCF(driver,CodalRaw_ID,CodalRaw_links):
         InsertCF(get_CF_type1_Aggregated(driver),CodalRaw_ID,CodalRaw_links,'CFCons')
 
 def RUN(driver,df):
-    print('Initializing CF Handler...')
-    # df=get_unconverted()
-    # driver=webdriver.Chrome()
-    # driver.maximize_window()  
-    for index,row in df.iterrows():
-        driver.get('https://codal.ir'+str(row['HtmlUrl']))
-        time.sleep(2)
-        takeCareOFCF(driver,row['report_ID'],row['HtmlUrl'])
+        print('Initializing CF Handler...')
+        # df=get_unconverted()
+        # driver=webdriver.Chrome()
+        # driver.maximize_window()  
+        for index,row in df.iterrows():
+            try:
+                    driver.get('https://codal.ir'+str(row['HtmlUrl']))
+                    time.sleep(2)
+                    takeCareOFCF(driver,row['report_ID'],row['HtmlUrl'])
+            except (Exception, psycopg2.Error) as error :
+                    print(error)
+                    # print(CodalRaw_links)
+                    continue
+        # driver.quit()
 
 
 def scrape(df, *, loop):
